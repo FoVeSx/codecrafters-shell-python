@@ -3,6 +3,7 @@
 # A REPL is an interactive loop that reads user input, evaluates it, prints the result, 
 # and then waits for the next input.
 import os
+import subprocess
 import sys
 
 from dataclasses import dataclass
@@ -18,6 +19,9 @@ class Command:
     command_valid: bool
 
 def valid_command_check(command: Command):
+    """
+    Check if command is valid
+    """
     if command.command_name in built_in_commands:
         command.command_valid = True
     
@@ -29,28 +33,47 @@ def valid_command_check(command: Command):
     return
 
 def type_handler(command: Command):
+    """
+    Type Handler (builtin)
+    """
     if len(command.command_args) == 0:
         return
     elif command.command_args[0] in built_in_commands:
-        print(f"{command.command_args[0]} is a shell builtin")
+        sys.stdout.write(f"{command.command_args[0]} is a shell builtin\n")
     else:
         for path in path_env_list:
             if(os.path.exists(f"{path}/{command.command_args[0]}")):
-                print(f"{command.command_args[0]} is {path}/{command.command_args[0]}")
+                sys.stdout.write(f"{command.command_args[0]} is {path}/{command.command_args[0]}\n")
                 return
-        print(f"{command.command_args[0]}: not found")
+        sys.stdout.write(f"{command.command_args[0]}: not found\n")
     return
 
 def echo_handler(command: Command):
+    """
+    Echo Handler (builtin)
+    """
     echo_string = " ".join(command.command_args)
-    print(echo_string)
+    sys.stdout.write(f"{echo_string}\n")
     return
 
 def exit_handler(command: Command):
+    """
+    Exit Handler (builtin)
+    """
     if len(command.command_args) == 0:
         sys.exit(0)
     else:
         sys.exit(int(command.command_args[0]))
+
+def execute_command(command: Command):
+    """
+    Run external programs with args (located using PATH environment variable)
+    """
+    full_command = [command.command_path] + command.command_args
+    #TODO: make this more robust, add try catch and better validation
+    result = subprocess.run(full_command, capture_output=True, text=True)
+    sys.stdout.write(result.stdout)
+    return
 
 def command_handler(command: Command):
     """
@@ -61,20 +84,22 @@ def command_handler(command: Command):
     :return
     """
     valid_command_check(command)
+
     if (command.command_valid == False):
-        print(f"{command.command_name}: not found")
+        sys.stdout.write(f"{command.command_name}: not found\n")
         return
 
-    if command.command_name == "exit":
+    elif command.command_name == "exit":
         exit_handler(command)
-        # exit, no return
-    
-    if command.command_name == "echo":
+
+    elif command.command_name == "echo":
         echo_handler(command)
-        return
     
-    if command.command_name == "type":
+    elif command.command_name == "type":
         type_handler(command)
+    
+    else:
+        execute_command(command)
 
     return
 
@@ -100,7 +125,7 @@ def main():
         path_env_list = path_env_str.split(":")
 
     except KeyError:
-        print("Please set the environment variable PATH")
+        sys.stdout.write("Please set the environment variable PATH\n")
         sys.exit(1)
 
     while(True):
