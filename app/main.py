@@ -6,6 +6,11 @@ import sys
 
 valid_commands = ["echo", "cd", "ls", "exit"]
 
+def echo_handler(options: list):
+    echo_string = " ".join(options)
+    print(echo_string)
+    return
+
 def command_handler(command: str, options: list):
     """
     Command Handler that will redirect program to command executor. 
@@ -17,6 +22,10 @@ def command_handler(command: str, options: list):
     """
     if command not in valid_commands:
         sys.stdout.write(f"{command}: command not found\n")
+        return
+    
+    if command == "echo":
+        echo_handler(options)
         return
 
     if command == "exit":
