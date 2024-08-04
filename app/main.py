@@ -8,7 +8,7 @@ import sys
 
 from dataclasses import dataclass
 
-built_in_commands = ["echo", "exit", "type"]
+built_in_commands = ["echo", "exit", "pwd", "type"]
 path_env_list = []
 
 @dataclass
@@ -32,22 +32,6 @@ def valid_command_check(command: Command):
             return
     return
 
-def type_handler(command: Command):
-    """
-    Type Handler (builtin)
-    """
-    if len(command.command_args) == 0:
-        return
-    elif command.command_args[0] in built_in_commands:
-        sys.stdout.write(f"{command.command_args[0]} is a shell builtin\n")
-    else:
-        for path in path_env_list:
-            if(os.path.exists(f"{path}/{command.command_args[0]}")):
-                sys.stdout.write(f"{command.command_args[0]} is {path}/{command.command_args[0]}\n")
-                return
-        sys.stdout.write(f"{command.command_args[0]}: not found\n")
-    return
-
 def echo_handler(command: Command):
     """
     Echo Handler (builtin)
@@ -65,12 +49,38 @@ def exit_handler(command: Command):
     else:
         sys.exit(int(command.command_args[0]))
 
+def pwd_handler(command: Command):
+    """
+    Pwd Handler (builtin)
+    """
+    cwd = os.getcwd()
+    sys.stdout.write(f"{cwd}\n")
+    return
+
+def type_handler(command: Command):
+    """
+    Type Handler (builtin)
+    """
+    if len(command.command_args) == 0:
+        return
+    elif command.command_args[0] in built_in_commands:
+        sys.stdout.write(f"{command.command_args[0]} is a shell builtin\n")
+    else:
+        for path in path_env_list:
+            if(os.path.exists(f"{path}/{command.command_args[0]}")):
+                sys.stdout.write(f"{command.command_args[0]} is {path}/{command.command_args[0]}\n")
+                return
+        sys.stdout.write(f"{command.command_args[0]}: not found\n")
+    return
+
+
 def execute_command(command: Command):
     """
     Run external programs with args (located using PATH environment variable)
     """
     full_command = [command.command_path] + command.command_args
     #TODO: make this more robust, add try catch and better validation
+    #TODO: support multiple args - weird issues with commands like ls -al *
     result = subprocess.run(full_command, capture_output=True, text=True)
     sys.stdout.write(result.stdout)
     return
@@ -94,6 +104,9 @@ def command_handler(command: Command):
 
     elif command.command_name == "echo":
         echo_handler(command)
+
+    elif command.command_name == "pwd":
+        pwd_handler(command)
     
     elif command.command_name == "type":
         type_handler(command)
