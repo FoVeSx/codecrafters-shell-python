@@ -36,8 +36,13 @@ def cd_handler(command: Command):
     """
     Change directory Handler (builtin)
     """
-    if len(command.command_args) == 0:
-        os.chdir("/home")
+    if len(command.command_args) == 0 or command.command_args[0] == '~':
+        try:
+            home_env_str = os.environ["HOME"]
+            os.chdir(f"{home_env_str}")        
+        except KeyError:
+            sys.stdout.write("Please set the environment variable HOME\n")
+            sys.exit(1)
     else:
         try:
             os.chdir(f"{command.command_args[0]}")        
