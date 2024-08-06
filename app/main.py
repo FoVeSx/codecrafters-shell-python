@@ -8,7 +8,7 @@ import sys
 
 from dataclasses import dataclass
 
-built_in_commands = ["echo", "exit", "pwd", "type"]
+built_in_commands = ["cd", "echo", "exit", "pwd", "type"]
 path_env_list = []
 
 @dataclass
@@ -30,6 +30,19 @@ def valid_command_check(command: Command):
             command.command_path = f"{path}/{command.command_name}"
             command.command_valid = True
             return
+    return
+
+def cd_handler(command: Command):
+    """
+    Change directory Handler (builtin)
+    """
+    if len(command.command_args) == 0:
+        os.chdir("/home")
+    else:
+        try:
+            os.chdir(f"{command.command_args[0]}")        
+        except Exception as e:
+            sys.stdout.write(f"{command.command_name}: {command.command_args[0]}: No such file or directory\n")
     return
 
 def echo_handler(command: Command):
@@ -101,6 +114,9 @@ def command_handler(command: Command):
 
     elif command.command_name == "exit":
         exit_handler(command)
+
+    elif command.command_name == "cd":
+        cd_handler(command)
 
     elif command.command_name == "echo":
         echo_handler(command)
